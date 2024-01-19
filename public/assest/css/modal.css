@@ -1,0 +1,109 @@
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  /* height: 100%; */
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+  /* border: none; */
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 60%;
+  height: 470px;
+}
+
+.modal-header {
+  /* padding: 10px 15px; */
+
+  /* border-bottom: 1px solid #ddd; */
+}
+
+.close {
+  color: #aaa;
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-bottom: 3px;
+  padding-top: 3px;
+  /* padding: 3px; */
+  float: right;
+  font-size: 25px;
+  border: 2px solid #888;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.modal-body {
+  /* padding: 20px; */
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.input-modal {
+  width: 100%;
+  padding: 7px;
+  border: 2px solid #f1f3f4;
+  border-radius: 3px;
+}
+
+.input-modal:focus {
+  outline: none;
+}
+
+.drop-down {
+  width: 100%;
+  padding: 7px;
+  border: 2px solid #f1f3f4;
+  border-radius: 3px;
+
+  /* width: 260px; */
+}
+
+.drop-down:focus {
+  outline: none;
+  border: none;
+}
+
+.modal-footer {
+  float: right;
+  margin-top: 20px;
+  display: flex;
+  gap: 15px;
+}
+
+.cncel {
+  border: 2px #f1f3f4 solid;
+  background-color: white;
+  color: black;
+  padding: 10px;
+}
+
+.crate {
+  background-color: #03543f;
+  border: none;
+  padding: 10px;
+  color: white;
+  border-radius: 2px;
+}
+
+.modal-label {
+  font-weight: bold;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
