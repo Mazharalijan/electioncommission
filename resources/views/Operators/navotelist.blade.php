@@ -40,7 +40,7 @@
                 border-radius: 5px;
               "
             >
-              <h3>Provincial Records</h3>
+              <h3>National Records</h3>
               <div style="display: flex; align-items: center; gap: 2rem">
 
                 @if(Session::get('role') == 'Operator')
@@ -65,14 +65,101 @@
           </div>
           <table style="width: 100%">
             <thead>
+                <form method="" action="{{ route('votes.nalist') }}">
+                    <tr>
+                        <th>
+                            @if(Request::get('partyCode') != null || Request::get('seatCode') != null || Request::get('district') != null || Request::get('division') != null)
+                            <button type="button" onclick="redirectToNalist()">Reset</button>
+                            @endif
+
+                        </th>
+                        <th colspan="">
+                            <div class="select-group">
+                            <select name="partyCode" style="width: 90%" id="" class="dropdown">
+                                <option value="">select party {{ Request::get("partyCode") }}</option>
+                                @if(!is_null($parties))
+                                @foreach ($parties as $party)
+                                <option value="{{ $party->partyID }}" {{ Request::get("partyCode") == $party->partyID ? 'selected' : '' }}>{{ $party->partyCode }}</option>
+                                @endforeach
+
+                            @endif
+                            </select>
+                            </div>
+                        </th>
+                        <th></th>
+                        <th colspan="">
+                            <div class="select-group">
+                            <select name="seatCode" style="width: 90%" id="" class="dropdown">
+                                <option value="">select Seat</option>
+                                @if(!is_null($seats))
+                                @foreach ($seats as $seat)
+                                <option value="{{ $seat->seatID }}" {{ Request::get("seatCode") == $seat->seatID ? 'selected' : '' }}>{{ $seat->seatCode }}</option>
+                                @endforeach
+
+                            @endif
+                            </select>
+                            </div>
+                        </th>
+                        <th colspan="">
+                            <div class="select-group">
+                            <select name="district" style="width: 90%" id="" class="dropdown">
+                                <option value="">select District</option>
+                                @if(!is_null($districts))
+                                    @foreach ($districts as $dist)
+                                    <option value="{{ $dist->distID }}" {{ Request::get("district") == $dist->distID ? 'selected' : '' }}>{{ $dist->districtName }}</option>
+                                    @endforeach
+
+                                @endif
+                            </select>
+                            </div>
+                        </th>
+                        <th colspan="">
+                            <div class="select-group">
+
+                            <select name="division" style="width: 90%" id="" class="dropdown">
+                                <option value="">Select Division</option>
+                                @if(!is_null($divisions))
+                                    @foreach ($divisions as $div)
+                                    <option value="{{ $div->divID }}" {{ Request::get("division") == $div->divID ? 'selected' : '' }}>{{ $div->divName }}</option>
+                                    @endforeach
+
+                                @endif
+                            </select>
+                            </div>
+                        </th>
+                        <th>
+                            <button type="submit" style="margin-top: -2px;" class="show-candidate">search</button>
+
+                        </th>
+                    </tr>
+                </form>
               <tr>
                 <th>Name</th>
-                <th>Party</th>
+                <th>
+                    Party
+                </th>
                 <th>Symbol</th>
-                <th>Seat Code</th>
-                <th>District</th>
-                <th>Division</th>
-                <th>Votes</th>
+                <th>
+                    <center>
+                    Seat Code
+                </center>
+                </th>
+                <th>
+                    <center>
+                    District
+                </center>
+                </th>
+                <th>
+                    <center>
+                        Division
+                    </center>
+
+                </th>
+                <th>
+                    <center>
+                        Votes
+                    </center>
+                </th>
                 @if(Session::get('role') == 'Operator')
                 <th>Actions</th>
                 @endif
@@ -137,6 +224,21 @@
 
             </tbody>
           </table>
+          @if(Request::get("partyCode") != null || Request::get("seatCode") != null || Request::get("district") != null || Request::get("division") != null )
+          @else
+            @if ($votes->lastPage() > 1)
+            <div class="pagination" style="margin-top: 2%;">
+                <a href="{{ $votes->previousPageUrl() }}">&laquo;</a>
+
+                <a href="{{ $votes->url(1) }}" >{{ 1 }}</a>
+                <a href="#" style="pointer-events: none;">...</a>
+                <a href="{{ $votes->url($votes->currentPage()) }}" class="active">{{ $votes->currentPage() }}</a>
+                <a href="#" style="pointer-events: none;">...</a>
+                <a href="{{ $votes->url($votes->lastPage()) }}">{{ $votes->lastPage() }}</a>
+                <a href="{{ $votes->nextPageUrl() }}">&raquo;</a>
+            </div>
+            @endif
+          @endif
         </div>
 
         {{--  modal starts here  --}}
@@ -262,6 +364,11 @@
                 }
             })
         })
+
+        function redirectToNalist() {
+            var url = "{{ route('votes.nalist') }}";
+            window.location.href = url;
+        }
 
     </script>
     @endsection

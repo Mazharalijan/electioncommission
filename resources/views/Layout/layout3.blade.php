@@ -48,6 +48,12 @@
     <main class="layout">
       <aside class="sidebar">
         <ul>
+            @if(Session::get('role') == 'Admin')
+            <li>
+              <i class="fas fa-book"></i>
+              <a href="{{ route('reports') }}">Reports</a>
+            </li>
+            @endif
           <li>
             <i class="fas fa-book" style="color: black"></i>
             <a href="{{ route('votes.pklist') }}">Votting Details</a>
@@ -63,7 +69,12 @@
       </aside>
       <div class="mobile-menu">
         <ul>
-
+            @if(Session::get('role') == 'Admin')
+            <li>
+              <i class="fas fa-user"></i>
+              <a href="{{ route('reports') }}">Reports</a>
+            </li>
+            @endif
           <li>
             <i class="fas fa-book"></i>
             <a href="{{ route('votes.pklist') }}">Voting Details</a>

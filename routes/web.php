@@ -63,7 +63,9 @@ Route::group(['middleware' => 'loginguard'], function () {
         Route::get('/close-enty',[AuthController::class, 'closeSystemEntry'])->name('close.entry');
 
         Route::get('/candidate', [CandidateController::class, 'index'])->name('candidate.list');
-
+        Route::get('/reports',function(){
+            return view("Dashboard.reports");
+        })->name("reports");
         // operator routes
         Route::get('/operator/create', [OperatorController::class, 'create'])->name('operator.create');
 

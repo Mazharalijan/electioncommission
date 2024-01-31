@@ -12,69 +12,227 @@ use App\Models\Votes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Paginator;
 use Carbon\Carbon;
 
 class VotesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $seatCode=null;
+        $partyCode=null;
+        $districtCode = null;
+        $divisionCode = null;
+        if($request->get("seatCode") != null){
+            $seatCode = $request->get("seatCode");
+            //dd($seatCode);
+        }
+        if($request->get("partyCode") != null){
+            $partyCode = $request->get("partyCode");
+            //dd($seatCode);
+        }
+        if($request->get("district") != null){
+            $districtCode = $request->get("district");
+            //dd($seatCode);
+        }
+        if($request->get("division") != null){
+            $divisionCode = $request->get("division");
+            //dd($seatCode);
+        }
+
         $district = auth('admin')->user()->fk_district_id;
         $votes = Votes::with(['candidatesconst.candidate','candidatesconst.symbols.party','candidatesconst.seats', 'districts.divisions']);
-            if(Session::get('role') == 'Operator'){
-                $votes->whereHas('seats', function ($query) use ($district) {
-                    $query->where('seatType', 'Provincial')
-                    ->where('fk_district_id',$district);
+            if($partyCode != null){
+            $votes=$votes->whereHas('candidatesconst.symbols.party',function($query) use ($partyCode) {
+                    $query->where('partyID',$partyCode);
                 });
-            }else{
-                $votes->whereHas('seats', function ($query) {
-                    $query->where('seatType', 'Provincial');
+            }
 
+            if(Session::get('role') == 'Operator'){
+                if($seatCode != null){
+                    $votes->whereHas('seats', function ($query) use ($district,$seatCode) {
+                        $query->where('seatType', 'Provincial')
+                        ->where('fk_district_id',$district)
+                        ->where('seatID',$seatCode);
+                    });
+                }else{
+                    $votes->whereHas('seats', function ($query) use ($district) {
+                        $query->where('seatType', 'Provincial')
+                        ->where('fk_district_id',$district);
+                    });
+                }
+
+            }else{
+                if($seatCode != null){
+                    if($districtCode != null){
+                        $votes->whereHas('seats', function ($query) use ($seatCode,$districtCode) {
+                            $query->where('seatType', 'Provincial')
+                            ->where('seatID',$seatCode)
+                            ->where('fk_district_id',$districtCode);
+                        });
+
+                    }else{
+                        $votes->whereHas('seats', function ($query) use ($seatCode) {
+                            $query->where('seatType', 'Provincial')
+                            ->where('seatID',$seatCode);
+                        });
+                    }
+
+            }else{
+                if($districtCode != null){
+                    $votes->whereHas('seats', function ($query)use($districtCode) {
+                        $query->where('seatType', 'Provincial')
+                        ->where('fk_district_id',$districtCode);
+                    });
+                }else{
+                    $votes->whereHas('seats', function ($query) {
+                        $query->where('seatType', 'Provincial');
+
+
+                    });
+                }
+
+                }
+            }
+
+            if($divisionCode != null){
+                $votes = $votes->whereHas('districts', function ($query) use ($divisionCode) {
+                    $query->with(['divisions'])
+                    ->where('fk_division_id',$divisionCode);
+                });
+
+            }else{
+                $votes = $votes->whereHas('districts', function ($query) {
+                    $query->with(['divisions']);
                 });
             }
 
 
-            $votes->whereHas('districts', function ($query) {
-                $query->with(['divisions']);
-            })->orderBy('votes', 'DESC');
+            $votes = $votes->orderBy('votes', 'DESC');
 
 
 
 
-        $votes = $votes->get();
-        $data = compact('votes');
+        $votes = $votes->paginate(10);
+
+
+        $divisions = Divisions::all();
+        $districts =Districts::all();
+        $seats = SeatType::where('seatType','Provincial')->get();
+        $parties = Party::all();
+
+
+        $data = compact('votes','divisions','districts','seats','parties');
 
         return view('Operators.pkvotelist')->with($data);
     }
 
-    public function naSeats()
+    public function naSeats(Request $request)
     {
+        $seatCode=null;
+        $partyCode=null;
+        $districtCode = null;
+        $divisionCode = null;
+        if($request->get("seatCode") != null){
+            $seatCode = $request->get("seatCode");
+            //dd($seatCode);
+        }
+        if($request->get("partyCode") != null){
+            $partyCode = $request->get("partyCode");
+            //dd($seatCode);
+        }
+        if($request->get("district") != null){
+            $districtCode = $request->get("district");
+            //dd($seatCode);
+        }
+        if($request->get("division") != null){
+            $divisionCode = $request->get("division");
+            //dd($seatCode);
+        }
+
         $district = auth('admin')->user()->fk_district_id;
         $votes = Votes::with(['candidatesconst.candidate','candidatesconst.symbols.party','candidatesconst.seats', 'districts.divisions']);
+            if($partyCode != null){
+            $votes=$votes->whereHas('candidatesconst.symbols.party',function($query) use ($partyCode) {
+                    $query->where('partyID',$partyCode);
+                });
+            }
 
-        if(Session::get('role') == 'Operator'){
-            $votes->whereHas('seats', function ($query) use ($district) {
-                $query->where('seatType', 'National')
-                ->where('fk_district_id',$district);
-            });
-        }else{
-            $votes->whereHas('seats', function ($query) {
-                $query->where('seatType', 'Provincial');
+            if(Session::get('role') == 'Operator'){
+                if($seatCode != null){
+                    $votes->whereHas('seats', function ($query) use ($district,$seatCode) {
+                        $query->where('seatType', 'National')
+                        ->where('fk_district_id',$district)
+                        ->where('seatID',$seatCode);
+                    });
+                }else{
+                    $votes->whereHas('seats', function ($query) use ($district) {
+                        $query->where('seatType', 'National')
+                        ->where('fk_district_id',$district);
+                    });
+                }
 
-            });
-        }
-        $votes->whereHas('districts', function ($query) {
-            $query->with(['divisions']);
-        })->orderBy('votes', 'DESC');
+            }else{
+                if($seatCode != null){
+                    if($districtCode != null){
+                        $votes->whereHas('seats', function ($query) use ($seatCode,$districtCode) {
+                            $query->where('seatType', 'National')
+                            ->where('seatID',$seatCode)
+                            ->where('fk_district_id',$districtCode);
+                        });
+
+                    }else{
+                        $votes->whereHas('seats', function ($query) use ($seatCode) {
+                            $query->where('seatType', 'National')
+                            ->where('seatID',$seatCode);
+                        });
+                    }
+
+            }else{
+                if($districtCode != null){
+                    $votes->whereHas('seats', function ($query)use($districtCode) {
+                        $query->where('seatType', 'National')
+                        ->where('fk_district_id',$districtCode);
+                    });
+                }else{
+                    $votes->whereHas('seats', function ($query) {
+                        $query->where('seatType', 'National');
 
 
-        // if (Session::get('role') == 'Operator') {
+                    });
+                }
 
-        //     $votes = $votes->where('EUID', Session::get('user_id'));
+                }
+            }
 
-        // }
+            if($divisionCode != null){
+                $votes = $votes->whereHas('districts', function ($query) use ($divisionCode) {
+                    $query->with(['divisions'])
+                    ->where('fk_division_id',$divisionCode);
+                });
 
-        $votes = $votes->get();
-        $data = compact('votes');
+            }else{
+                $votes = $votes->whereHas('districts', function ($query) {
+                    $query->with(['divisions']);
+                });
+            }
+
+
+            $votes = $votes->orderBy('votes', 'DESC');
+
+
+
+
+        $votes = $votes->paginate(10);
+
+
+        $divisions = Divisions::all();
+        $districts =Districts::all();
+        $seats = SeatType::where('seatType','National')->get();
+        $parties = Party::all();
+
+
+        $data = compact('votes','divisions','districts','seats','parties');
 
         return view('Operators.navotelist')->with($data);
     }
