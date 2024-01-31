@@ -128,6 +128,9 @@
                         </div>
                         @endif
                     </th>
+                    @if(Session::get('role') == 'Operator')
+                        <th></th>
+                        @endif
                     <th>
                         <button type="submit" style="margin-top: -2px;" class="show-candidate">search</button>
 
@@ -161,7 +164,12 @@
                 </th>
                 @if(Session::get('role') == 'Operator')
                 @if($status == 'Active')
-                    <th>Actions</th>
+                    <th>
+                        <center>
+                            Actions
+                        </center>
+
+                    </th>
                 @endif
 
                 @endif

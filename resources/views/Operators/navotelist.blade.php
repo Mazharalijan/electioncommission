@@ -101,6 +101,7 @@
                             </div>
                         </th>
                         <th colspan="">
+                            @if(Session::get('role') != 'Operator')
                             <div class="select-group">
                             <select name="district" style="width: 90%" id="" class="dropdown">
                                 <option value="">select District</option>
@@ -112,8 +113,10 @@
                                 @endif
                             </select>
                             </div>
+                            @endif
                         </th>
                         <th colspan="">
+                            @if(Session::get('role') != 'Operator')
                             <div class="select-group">
 
                             <select name="division" style="width: 90%" id="" class="dropdown">
@@ -126,7 +129,11 @@
                                 @endif
                             </select>
                             </div>
+                            @endif
                         </th>
+                        @if(Session::get('role') == 'Operator')
+                        <th></th>
+                        @endif
                         <th>
                             <button type="submit" style="margin-top: -2px;" class="show-candidate">search</button>
 
@@ -161,7 +168,11 @@
                     </center>
                 </th>
                 @if(Session::get('role') == 'Operator')
-                <th>Actions</th>
+                <th>
+                    <center>
+                        Actions
+                    </center>
+                    </th>
                 @endif
               </tr>
             </thead>
