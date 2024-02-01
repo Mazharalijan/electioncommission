@@ -40,7 +40,7 @@ class VotesController extends Controller
             //dd($seatCode);
         }
 
-        $district = auth('admin')->user()->fk_district_id;
+        $district =  explode(",",auth('admin')->user()->fk_district_id);
         $votes = Votes::with(['candidatesconst.candidate','candidatesconst.symbols.party','candidatesconst.seats', 'districts.divisions']);
             if($partyCode != null){
             $votes=$votes->whereHas('candidatesconst.symbols.party',function($query) use ($partyCode) {
@@ -52,13 +52,13 @@ class VotesController extends Controller
                 if($seatCode != null){
                     $votes->whereHas('seats', function ($query) use ($district,$seatCode) {
                         $query->where('seatType', 'Provincial')
-                        ->where('fk_district_id',$district)
+                        ->whereIn('fk_district_id',$district)
                         ->where('seatID',$seatCode);
                     });
                 }else{
                     $votes->whereHas('seats', function ($query) use ($district) {
                         $query->where('seatType', 'Provincial')
-                        ->where('fk_district_id',$district);
+                        ->whereIn('fk_district_id',$district);
                     });
                 }
 
@@ -116,10 +116,19 @@ class VotesController extends Controller
         $votes = $votes->paginate(10);
 
 
-        $divisions = Divisions::all();
-        $districts =Districts::all();
-        $seats = SeatType::where('seatType','Provincial')->get();
-        $parties = Party::all();
+
+        if(Session::get('role') == "Operator"){
+            $divisions = Divisions::all();
+            $districts =Districts::whereIn("distID",$district)->get();
+            $seats = SeatType::where('seatType','Provincial')->whereIn('fk_district_id',$district)->get();
+            $parties = Party::all();
+        }else{
+            $divisions = Divisions::all();
+            $districts =Districts::all();
+            $seats = SeatType::where('seatType','Provincial')->get();
+            $parties = Party::all();
+        }
+
 
 
         $data = compact('votes','divisions','districts','seats','parties');
@@ -150,7 +159,7 @@ class VotesController extends Controller
             //dd($seatCode);
         }
 
-        $district = auth('admin')->user()->fk_district_id;
+        $district =  explode(",",auth('admin')->user()->fk_district_id);
         $votes = Votes::with(['candidatesconst.candidate','candidatesconst.symbols.party','candidatesconst.seats', 'districts.divisions']);
             if($partyCode != null){
             $votes=$votes->whereHas('candidatesconst.symbols.party',function($query) use ($partyCode) {
@@ -162,13 +171,13 @@ class VotesController extends Controller
                 if($seatCode != null){
                     $votes->whereHas('seats', function ($query) use ($district,$seatCode) {
                         $query->where('seatType', 'National')
-                        ->where('fk_district_id',$district)
+                        ->whereIn('fk_district_id',$district)
                         ->where('seatID',$seatCode);
                     });
                 }else{
                     $votes->whereHas('seats', function ($query) use ($district) {
                         $query->where('seatType', 'National')
-                        ->where('fk_district_id',$district);
+                        ->whereIn('fk_district_id',$district);
                     });
                 }
 
@@ -226,10 +235,18 @@ class VotesController extends Controller
         $votes = $votes->paginate(10);
 
 
-        $divisions = Divisions::all();
-        $districts =Districts::all();
-        $seats = SeatType::where('seatType','National')->get();
-        $parties = Party::all();
+
+        if(Session::get('role') == "Operator"){
+            $divisions = Divisions::all();
+            $districts =Districts::whereIn("distID",$district)->get();
+            $seats = SeatType::where('seatType','National')->whereIn('fk_district_id',$district)->get();
+            $parties = Party::all();
+        }else{
+            $divisions = Divisions::all();
+            $districts =Districts::all();
+            $seats = SeatType::where('seatType','National')->get();
+            $parties = Party::all();
+        }
 
 
         $data = compact('votes','divisions','districts','seats','parties');
@@ -239,9 +256,9 @@ class VotesController extends Controller
 
     public function create()
     {
-        $district = auth('admin')->user()->fk_district_id;
-        $pkseats = SeatType::with(['votes'])->whereDoesntHave('votes')->where('seatType', 'Provincial')->where('fk_district_id', $district)->get();
-        $naseats = SeatType::with(['votes'])->whereDoesntHave('votes')->where('seatType', 'National')->where('fk_district_id', $district)->get();
+        $district = explode(",",auth('admin')->user()->fk_district_id);
+        $pkseats = SeatType::with(['votes'])->whereDoesntHave('votes')->where('seatType', 'Provincial')->whereIn('fk_district_id', $district)->get();
+        $naseats = SeatType::with(['votes'])->whereDoesntHave('votes')->where('seatType', 'National')->whereIn('fk_district_id', $district)->get();
 
         $data = compact('pkseats', 'naseats');
 
@@ -312,6 +329,8 @@ class VotesController extends Controller
         }
 
         $vote = Votes::find($id);
+        // apply logic that on update the sum of total entered votes not more than registered votes
+
         if(is_null($vote)){
             return response()->json([
                 'status' => false,
@@ -319,6 +338,32 @@ class VotesController extends Controller
                 'message' => 'Record not found'
             ]);
         }
+        $seatId = $vote->fk_seat_id;
+         $totalVotes = SeatType::where('seatID', $seatId)
+                                ->selectRaw('SUM(registeredMaleVotes + registeredFemaleVotes) as totalVotes')
+                                ->value('totalVotes');
+
+        $totalVotes = intval($totalVotes);
+         $votesSum = Votes::where('fk_seat_id', $seatId)
+                        ->whereNotIn('voteID', [$id])
+                        ->selectRaw('SUM(votes) AS votestabletotal')
+                        ->groupBy('fk_seat_id')
+                        ->first();
+        $votesSum = intval($votesSum->votestabletotal) + $request->votes;
+        // return response([
+        //     "totalregvotes" => $totalVotes,
+        //     "insertedvotes" => $votesSum
+        // ]);
+               if($votesSum > $totalVotes){
+
+                return response()->json([
+                    'status' => false,
+                    'exced' => true,
+                    'message' => 'Enter votes exced the registered votes'
+                ]);
+
+        }
+
         $data  = [
             'votes' => $request->votes,
             'UUID' => Session::get('user_id'),

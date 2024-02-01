@@ -40,9 +40,11 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+
     public function districts()
     {
-        return $this->hasOne(Districts::class, 'distID', 'fk_district_id');
+
+        return $this->hasMany(Districts::class, 'distID', 'fk_district_id');
     }
 
     /**

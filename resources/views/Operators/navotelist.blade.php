@@ -101,7 +101,7 @@
                             </div>
                         </th>
                         <th colspan="">
-                            @if(Session::get('role') != 'Operator')
+
                             <div class="select-group">
                             <select name="district" style="width: 90%" id="" class="dropdown">
                                 <option value="">select District</option>
@@ -113,7 +113,7 @@
                                 @endif
                             </select>
                             </div>
-                            @endif
+
                         </th>
                         <th colspan="">
                             @if(Session::get('role') != 'Operator')

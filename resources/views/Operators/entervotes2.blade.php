@@ -277,6 +277,7 @@
                         $('#pkvotesentrytable').empty();
                         $("#pkvotesentrytable").append(`<tr>
                             <th>Candidate</th>
+
                             <th>Symbol</th>
                             <th>Total Votes</th>
                           </tr>`);
@@ -288,6 +289,7 @@
                                     <input type='hidden' name='candidateID[]' value='${value.candidate.candidateID}'>
                                     <input type='hidden' name='seatID' value='${value.fk_seat_id}'>
                                 </td>
+
                                 <td>${value.symbols !== null ? '<img width="50px" height="45px" src="{{ url('/PartySymbol/') }}'+'/'+value.symbols.symbolImage+'" />'  : 'Null'}</td>
                                 <td class="total-votes">
                                   <input

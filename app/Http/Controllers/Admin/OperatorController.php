@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendMailJob;
 use App\Models\User;
+use App\Models\Districts;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
@@ -16,8 +17,24 @@ class OperatorController extends Controller
 {
     public function index()
     {
-        $operators = User::with(['districts'])->where('role', 'Operator')->get();
-        $data = compact('operators');
+        $operators = User::where('role', 'Operator')
+        ->get();
+        $disticts = Districts::all();
+        $oper = []; // initialize the array
+
+        foreach ($operators as $op) {
+            $data = [
+                "id" => $op->id,
+                "name" => $op->name,
+                "email" => $op->email,
+                "phoneNo" => $op->phoneNo,
+                "status" => $op->status,
+                'district' => Districts::whereIn("distID", explode(",", $op->fk_district_id))->get()->toArray(),
+            ];
+            array_push($oper, $data);
+        }
+
+        $data = compact('oper');
 
         //return $operators;
 
@@ -43,7 +60,7 @@ class OperatorController extends Controller
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
             'phoneNo' => 'required',
-            'district' => 'required',
+            //'district' => 'required',
             //'password' => 'required|min:6|confirmed',
             //'password_confirmation' => 'required|min:6',
         ]);
@@ -52,7 +69,7 @@ class OperatorController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'phoneNo' => '+'.$request->phoneNo,
-                'fk_district_id' => $request->district,
+                'fk_district_id' => implode(",",$request->district),
                 'role' => 'Operator',
                 'status' => 'Active',
                 'password' => Hash::make('admin'),
@@ -105,7 +122,7 @@ class OperatorController extends Controller
 
         $operator = User::where('id', $id)->where('role', 'Operator')->first();
         if (! is_null($operator)) {
-            $data = compact('operator');
+            //$data = compact('operator');
 
             //return view('Operators.edit')->with($data);
             return response()->json([
@@ -124,19 +141,19 @@ class OperatorController extends Controller
 
     public function update(string $id, Request $request)
     {
-
+        //return response($request->all());
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'email' => 'required|email|unique:users,id,'.$request->id,
             'phoneNo' => 'required',
-            'district' => 'required',
+            //'district' => 'required',
         ]);
         if ($validator->passes()) {
             $data = [
                 'name' => $request->name,
                 'email' => $request->email,
                 'phoneNo' => '+'.$request->phoneNo,
-                'fk_district_id' => $request->district,
+                'fk_district_id' => implode(",",$request->district),
                 'role' => 'Operator',
                 'status' => 'Active',
 

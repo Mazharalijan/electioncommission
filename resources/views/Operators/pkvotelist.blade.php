@@ -98,7 +98,7 @@
                         </div>
                     </th>
                     <th colspan="">
-                        @if(Session::get('role') != 'Operator')
+
                         <div class="select-group">
                         <select name="district" style="width: 90%" id="" class="dropdown">
                             <option value="">select District</option>
@@ -110,7 +110,7 @@
                             @endif
                         </select>
                         </div>
-                        @endif
+
                     </th>
                     <th colspan="">
                         @if(Session::get('role') != 'Operator')
@@ -379,7 +379,12 @@
                         $('#createBtn').prop('disabled', false);
                         closeModal();
                         window.location.href = '{{ route("votes.pklist") }}';
-                    }else{
+                    }
+                    else if(response["status"] === false && response["exced"] ===true){
+                        $('#createBtn').prop('disabled', false);
+                        alert('Enter Votes exceds the registered votes');
+                    }
+                    else{
                         $('#createBtn').prop('disabled', false);
                         alert('Something went wront!');
                     }

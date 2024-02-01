@@ -53,6 +53,17 @@ class AuthController extends Controller
                 } elseif ($admin->role == 'Operator') {
                     //return 'Hello 4';
                     //operator redirection here
+                    if($admin->otp_status== "In-Active"){
+                        Session::put([
+                        'user_id' => $admin->id,
+                        'role' => $admin->role,
+                        'phoneNo' => $admin->phoneNo,
+                        'email' => $admin->email,
+                        "otpstatus" => 'okay'
+                    ]);
+                    return redirect()->route("votes.pklist");
+                    }else{
+
                     Session::put([
                         'user_id' => $admin->id,
                         'role' => $admin->role,
@@ -60,8 +71,10 @@ class AuthController extends Controller
                         'email' => $admin->email,
                     ]);
 
-                    return redirect()->route('operator.sendotp');
 
+
+                    return redirect()->route('operator.sendotp');
+                }
                 } else {
                     //return 'Hello 5';
 

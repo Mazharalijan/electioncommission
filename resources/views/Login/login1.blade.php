@@ -22,8 +22,8 @@
   </head>
   <body>
     <nav>
-      <div class="container">
-        <div class="logo">
+      <div class="container" >
+        <div class="logo" >
           <img src="{{ asset('assest/images/image 1.png') }}" alt="" />
         </div>
 

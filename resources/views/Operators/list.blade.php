@@ -78,21 +78,28 @@
               </tr>
             </thead>
             <tbody>
-                @if(!is_null($operators))
-                    @foreach ($operators as $operator)
-                    <tr>
-                        <td>{{ $operator->name }}</td>
-                        <td>{{ $operator->email }}</td>
-                        <td>{{ $operator->phoneNo }}</td>
-                        @if($operator->districts == null)
-                        <td></td>
-                        @else
-                        <td>{{ $operator->districts->districtName }}</td>
-                        @endif
+                @if(!is_null($oper))
+                    @foreach ($oper as $item)
 
-                        <td><span style="margin-left: 15px; ">{{ $operator->status }}</span></td>
+                    <tr>
+                        <td>{{ $item["name"] }}</td>
+                        <td>{{ $item["email"] }}</td>
+                        <td>{{ $item["phoneNo"] }}</td>
+
+                        <td>
+                            <ul>
+                                @foreach ($item["district"] as $dist )
+                                <li>{{ $dist["districtName"] }}</li>
+                            @endforeach
+                            </ul>
+
+
+                             </td>
+
+
+                        <td><span style="margin-left: 15px; ">{{ $item["status"] }}</span></td>
                         <td><center>
-                            <a href="#" onclick="updateoperator({{ $operator->id }})" style="text-decoration: none"><span class="icon" style="color: green; margin-left:-25px;"><i class="fas fa-edit"></i></span></a>
+                            <a href="#" onclick="updateoperator({{ $item['id'] }})" style="text-decoration: none"><span class="icon" style="color: green; margin-left:-25px;"><i class="fas fa-edit"></i></span></a>
                         </center>
 
                         </td>
@@ -122,9 +129,9 @@
             <form name="addoperator" id="addoperator">
             <div class="input-fields">
                 <label class="modal-label" for="dropdown"
-                ><span style="color: red">*</span>District</label
+                ><span style="color: red">*</span>District <span style="opacity: 0.5; font-size:12px">(select multiple district by pressing hold Ctrl and click)</span></label
               >
-              <select id="dropdown" name="district" class="drop-down">
+              <select id="dropdown" multiple name="district[]" class="drop-down">
               </select>
               <p class="text-danger" id="districterror"></p>
               <label for="input1" class="modal-label">
@@ -164,17 +171,19 @@
           </div>
           <div class="modal-body">
             <form name="updateoperatorform" id="updateoperatorform">
+                <input type="hidden" name="operatorID" id="operatorID">
             <div class="input-fields">
+
                 <label class="modal-label" for="dropdown"
                 ><span style="color: red">*</span>District</label
               >
-              <select id="updateDistrict" name="district" class="drop-down">
+              <select multiple id="updateDistrict" name="district[]" class="drop-down">
               </select>
               <label for="input1" class="modal-label">
                 <span style="color: red; margin-left: 3px">*</span>Name</label
               >
               <input type="text" name="name" class="input-modal" id="updateName" /><br />
-              <input type="hidden" name="operatorID" id="operatorID">
+
               <label for="input2" class="modal-label">
                 <span style="color: red">*</span>Email</label
               >
@@ -234,7 +243,10 @@
       };
 
       function updateoperator(id){
-        var district;
+
+        var districts;
+        var districtArray;
+        var arrayOfIntegers;
         var url = '{{ route("operator.edit","ID") }}';
         url = url.replace('ID',id);
         // fetch operator record
@@ -248,7 +260,12 @@
                 $("#updateEmail").val(res.data.email);
                 $("#updatePhoneNo").val(parseInt(res.data.phoneNo));
                 $("#operatorID").val(res.data.id);
-                 district = res.data.fk_district_id;
+
+                districts= res.data.fk_district_id
+                districtArray=districts.split(',');
+
+                 arrayOfIntegers = districtArray.map(str => parseInt(str, 10));
+
 
             }
         });
@@ -263,11 +280,14 @@
                 $('#updateDistrict').empty();
 
                 $('#updateDistrict').append(`<option value="">Please select</option>`);
-                $.each(response, function(key, value) {
-                    $('#updateDistrict').append('<option value="'+ value["distID"] +'" ' + (value["distID"] === district ? 'selected' : '') + '>'+ value["districtName"] +'</option>');
+                $.each(response, function(index, value) {
+                    $('#updateDistrict').append('<option value="' + value["distID"] + '" ' + ($.inArray(value["distID"], arrayOfIntegers) !== -1 ? 'selected' : '') + '>' + value["districtName"] + '</option>');
                 });
              }
         })
+
+
+
         updatemodal.style.display = 'block';
       }
       // Function to close modal
@@ -300,7 +320,8 @@
 $("#updateoperatorform").submit(function(event){
     event.preventDefault();
     var formArray = $(this).serializeArray();
-    var id = formArray[2].value;
+    var id = formArray[0].value;
+    console.log(formArray)
     var url = '{{ route("operator.update","ID") }}';
     url = url.replace("ID",id);
     $.ajax({
