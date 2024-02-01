@@ -25,6 +25,10 @@ class AuthController extends Controller
 
     public function login()
     {
+        if(!Session::has("otpstatus") && Session::get("role") == "Operator"){
+            Auth::guard('admin')->logout();
+            Session::flush();
+        }
         return view('Login.login1');
     }
 
