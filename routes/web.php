@@ -96,6 +96,7 @@ Route::group(['middleware' => 'loginguard'], function () {
         Route::get('/set-otp-session', [AuthController::class, 'login']);
         Route::get('/check-email', [AuthController::class, 'login']);
         Route::get('/check-number', [AuthController::class, 'login']);
+        Route::get('/clear-session',[AuthController::class, 'clearSession'])->name("clearSession");
         // dummy routes end
 
         Route::group(['middleware' => 'otpguard'], function () {
@@ -111,6 +112,7 @@ Route::group(['middleware' => 'loginguard'], function () {
             Route::post('/votes/Na-votes-details', [VotesController::class, 'enterNaVotesDetails'])->name('votes.Nadetails');
             Route::post('/votes/pk-seats-entry-detail', [VotesController::class, 'submitpkvotesentry'])->name('votes.pkseatsentry');
             Route::post('/votes/na-seats-entry-detail', [VotesController::class, 'submitnavotesentry'])->name('votes.naseatsentry');
+            Route::get("/otp-status",[AuthController::class, "otpStatus"])->name("otpStatus");
 
         });
     });

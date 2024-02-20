@@ -41,6 +41,7 @@ class VotesController extends Controller
         }
 
         $district =  explode(",",auth('admin')->user()->fk_district_id);
+
         $votes = Votes::with(['candidatesconst.candidate','candidatesconst.symbols.party','candidatesconst.seats', 'districts.divisions']);
             if($partyCode != null){
             $votes=$votes->whereHas('candidatesconst.symbols.party',function($query) use ($partyCode) {
@@ -50,16 +51,37 @@ class VotesController extends Controller
 
             if(Session::get('role') == 'Operator'){
                 if($seatCode != null){
-                    $votes->whereHas('seats', function ($query) use ($district,$seatCode) {
-                        $query->where('seatType', 'Provincial')
-                        ->whereIn('fk_district_id',$district)
-                        ->where('seatID',$seatCode);
-                    });
+                    if($districtCode != null){
+                        $votes->whereHas('seats', function ($query) use ($district,$seatCode,$districtCode) {
+                            $query->where('seatType', 'Provincial')
+                            ->where('fk_district_id',$districtCode)
+
+                            ->where('seatID',$seatCode);
+                        });
+                    }else{
+                        $votes->whereHas('seats', function ($query) use ($district,$seatCode) {
+                            $query->where('seatType', 'Provincial')
+                            ->whereIn('fk_district_id',$district)
+                            ->where('seatID',$seatCode);
+                        });
+                    }
+
                 }else{
-                    $votes->whereHas('seats', function ($query) use ($district) {
-                        $query->where('seatType', 'Provincial')
-                        ->whereIn('fk_district_id',$district);
-                    });
+                    if($districtCode != null){
+                        $votes->whereHas('seats', function ($query) use ($districtCode,$district) {
+                            $query->where('seatType', 'Provincial')
+                            ->where('fk_district_id',$districtCode)
+                            ->whereIn('fk_district_id',$district);
+
+                        });
+                    }else{
+                        $votes->whereHas('seats', function ($query) use ($district) {
+                            $query->where('seatType', 'Provincial')
+                            ->whereIn('fk_district_id',$district);
+
+                        });
+                    }
+
                 }
 
             }else{
@@ -108,29 +130,73 @@ class VotesController extends Controller
             }
 
 
-            $votes = $votes->orderBy('votes', 'DESC');
+            $votes = $votes->orderBy('fk_seat_id', 'ASC');
+            $seatsId = [];
+            $districtsId = [];
+            $partiesIds = [];
+            $divisionsId = [];
+
+            if($seatCode !=null || $partyCode != null || $districtCode != null || $divisionCode != null){
+                $votes = $votes->get();
+                foreach($votes as $vote){
+                    foreach($vote->candidatesconst as $item){
+                        if($item->symbols != null){
+                            $record =  $item->symbols->fk_party_id;
+                            array_push($partiesIds,$record);
+                        }
+
+
+                        array_push($divisionsId,$vote->districts->fk_division_id);
+                    }
+                    array_push($seatsId,$vote->fk_seat_id);
+                    array_push($districtsId,$vote->seats->fk_district_id);
+
+
+                }
+            }else{
+                $votes = $votes->paginate(10);
+
+                $filterData = Votes::with(['candidatesconst.candidate','candidatesconst.symbols.party','candidatesconst.seats', 'districts.divisions']);
+
+                    $filterData->whereHas('seats', function ($query) use ($district) {
+                        $query->where('seatType', 'Provincial');
+                        if(Session::get('role') == 'Operator'){
+                        $query->whereIn('fk_district_id',$district);
+                    }
+                    });
+
+
+                $filterData=$filterData->get();
+                foreach($filterData as $vote){
+                    foreach($vote->candidatesconst as $item){
+                        if($item->symbols != null){
+                            $record =  $item->symbols->fk_party_id;
+                            array_push($partiesIds,$record);
+                        }
+
+
+                        array_push($divisionsId,$vote->districts->fk_division_id);
+                    }
+                    array_push($seatsId,$vote->fk_seat_id);
+                    array_push($districtsId,$vote->seats->fk_district_id);
+
+
+                }
+            }
 
 
 
 
-        $votes = $votes->paginate(10);
 
 
 
-        if(Session::get('role') == "Operator"){
-            $divisions = Divisions::all();
-            $districts =Districts::whereIn("distID",$district)->get();
-            $seats = SeatType::where('seatType','Provincial')->whereIn('fk_district_id',$district)->get();
-            $parties = Party::all();
-        }else{
-            $divisions = Divisions::all();
-            $districts =Districts::all();
-            $seats = SeatType::where('seatType','Provincial')->get();
-            $parties = Party::all();
-        }
+        $parties = Party::whereIn('partyID',$partiesIds)->get();
+        $seats = SeatType::whereIn('seatID', $seatsId)->get();
+        $districts = Districts::whereIn('distID', $districtsId)->get();
+        $divisions = Divisions::whereIn('divID',$divisionsId)->get();
 
 
-
+        //  return $divisions;
         $data = compact('votes','divisions','districts','seats','parties');
 
         return view('Operators.pkvotelist')->with($data);
@@ -161,93 +227,149 @@ class VotesController extends Controller
 
         $district =  explode(",",auth('admin')->user()->fk_district_id);
         $votes = Votes::with(['candidatesconst.candidate','candidatesconst.symbols.party','candidatesconst.seats', 'districts.divisions']);
-            if($partyCode != null){
-            $votes=$votes->whereHas('candidatesconst.symbols.party',function($query) use ($partyCode) {
-                    $query->where('partyID',$partyCode);
-                });
-            }
+        if($partyCode != null){
+        $votes=$votes->whereHas('candidatesconst.symbols.party',function($query) use ($partyCode) {
+                $query->where('partyID',$partyCode);
+            });
+        }
 
-            if(Session::get('role') == 'Operator'){
-                if($seatCode != null){
+        if(Session::get('role') == 'Operator'){
+            if($seatCode != null){
+                if($districtCode != null){
+                    $votes->whereHas('seats', function ($query) use ($district,$seatCode,$districtCode) {
+                        $query->where('seatType', 'National')
+                        ->where('fk_district_id',$districtCode)
+
+                        ->where('seatID',$seatCode);
+                    });
+                }else{
                     $votes->whereHas('seats', function ($query) use ($district,$seatCode) {
                         $query->where('seatType', 'National')
                         ->whereIn('fk_district_id',$district)
                         ->where('seatID',$seatCode);
                     });
+                }
+
+            }else{
+                if($districtCode != null){
+                    $votes->whereHas('seats', function ($query) use ($districtCode,$district) {
+                        $query->where('seatType', 'National')
+                        ->where('fk_district_id',$districtCode);
+
+                    });
                 }else{
                     $votes->whereHas('seats', function ($query) use ($district) {
                         $query->where('seatType', 'National')
                         ->whereIn('fk_district_id',$district);
+
                     });
                 }
 
-            }else{
-                if($seatCode != null){
-                    if($districtCode != null){
-                        $votes->whereHas('seats', function ($query) use ($seatCode,$districtCode) {
-                            $query->where('seatType', 'National')
-                            ->where('seatID',$seatCode)
-                            ->where('fk_district_id',$districtCode);
-                        });
+            }
 
-                    }else{
-                        $votes->whereHas('seats', function ($query) use ($seatCode) {
-                            $query->where('seatType', 'National')
-                            ->where('seatID',$seatCode);
-                        });
-                    }
-
-            }else{
+        }else{
+            if($seatCode != null){
                 if($districtCode != null){
-                    $votes->whereHas('seats', function ($query)use($districtCode) {
+                    $votes->whereHas('seats', function ($query) use ($seatCode,$districtCode) {
                         $query->where('seatType', 'National')
+                        ->where('seatID',$seatCode)
                         ->where('fk_district_id',$districtCode);
                     });
+
                 }else{
-                    $votes->whereHas('seats', function ($query) {
-                        $query->where('seatType', 'National');
-
-
+                    $votes->whereHas('seats', function ($query) use ($seatCode) {
+                        $query->where('seatType', 'National')
+                        ->where('seatID',$seatCode);
                     });
                 }
 
+        }else{
+            if($districtCode != null){
+                $votes->whereHas('seats', function ($query)use($districtCode) {
+                    $query->where('seatType', 'National')
+                    ->where('fk_district_id',$districtCode);
+                });
+            }else{
+                $votes->whereHas('seats', function ($query) {
+                    $query->where('seatType', 'National');
+
+
+                });
+            }
+
+            }
+        }
+
+        if($divisionCode != null){
+            $votes = $votes->whereHas('districts', function ($query) use ($divisionCode) {
+                $query->with(['divisions'])
+                ->where('fk_division_id',$divisionCode);
+            });
+
+        }else{
+            $votes = $votes->whereHas('districts', function ($query) {
+                $query->with(['divisions']);
+            });
+        }
+
+
+            $votes = $votes->orderBy('fk_seat_id', 'ASC');
+            $seatsId = [];
+            $districtsId = [];
+            $partiesIds = [];
+            $divisionsId = [];
+
+
+            if($seatCode !=null || $partyCode != null || $districtCode != null || $divisionCode != null){
+                $votes = $votes->get();
+                foreach($votes as $vote){
+                    foreach($vote->candidatesconst as $item){
+                        if($item->symbols != null){
+                            $record =  $item->symbols->fk_party_id;
+                            array_push($partiesIds,$record);
+                        }
+                        array_push($divisionsId,$vote->districts->fk_division_id);
+                    }
+                    array_push($seatsId,$vote->fk_seat_id);
+                    array_push($districtsId,$vote->seats->fk_district_id);
+
+
+                }
+            }else{
+                $votes = $votes->paginate(10);
+                $filterData = Votes::with(['candidatesconst.candidate','candidatesconst.symbols.party','candidatesconst.seats', 'districts.divisions']);
+
+                    $filterData->whereHas('seats', function ($query) use ($district) {
+                        $query->where('seatType', 'National');
+                        if(Session::get('role') == 'Operator'){
+                            $query->whereIn('fk_district_id',$district);
+                    }
+                    });
+
+
+                $filterData = $filterData->get();
+                foreach($filterData as $vote){
+                    foreach($vote->candidatesconst as $item){
+                        if($item->symbols != null){
+                            $record =  $item->symbols->fk_party_id;
+                            array_push($partiesIds,$record);
+                        }
+                        array_push($divisionsId,$vote->districts->fk_division_id);
+                    }
+                    array_push($seatsId,$vote->fk_seat_id);
+                    array_push($districtsId,$vote->seats->fk_district_id);
+
+
                 }
             }
 
-            if($divisionCode != null){
-                $votes = $votes->whereHas('districts', function ($query) use ($divisionCode) {
-                    $query->with(['divisions'])
-                    ->where('fk_division_id',$divisionCode);
-                });
-
-            }else{
-                $votes = $votes->whereHas('districts', function ($query) {
-                    $query->with(['divisions']);
-                });
-            }
-
-
-            $votes = $votes->orderBy('votes', 'DESC');
 
 
 
-
-        $votes = $votes->paginate(10);
-
-
-
-        if(Session::get('role') == "Operator"){
-            $divisions = Divisions::all();
-            $districts =Districts::whereIn("distID",$district)->get();
-            $seats = SeatType::where('seatType','National')->whereIn('fk_district_id',$district)->get();
-            $parties = Party::all();
-        }else{
-            $divisions = Divisions::all();
-            $districts =Districts::all();
-            $seats = SeatType::where('seatType','National')->get();
-            $parties = Party::all();
-        }
-
+        $parties = Party::whereIn('partyID',$partiesIds)->get();
+        $seats = SeatType::whereIn('seatID', $seatsId)->get();
+        $districts = Districts::whereIn('distID', $districtsId)->get();
+        $divisions = Divisions::whereIn('divID',$divisionsId)->get();
 
         $data = compact('votes','divisions','districts','seats','parties');
 
@@ -354,15 +476,7 @@ class VotesController extends Controller
         //     "totalregvotes" => $totalVotes,
         //     "insertedvotes" => $votesSum
         // ]);
-               if($votesSum > $totalVotes){
 
-                return response()->json([
-                    'status' => false,
-                    'exced' => true,
-                    'message' => 'Enter votes exced the registered votes'
-                ]);
-
-        }
 
         $data  = [
             'votes' => $request->votes,
@@ -370,6 +484,18 @@ class VotesController extends Controller
             'updated_at' => Carbon::now(),
         ];
         try{
+
+            if($votesSum > $totalVotes){
+                $vote->update($data);
+                $request->session()->flash('success','Record updated');
+
+                return response()->json([
+                    'status' => true,
+                    'exced' => true,
+                    'message' => 'Enter votes exced the registered votes'
+                ]);
+
+        }
             $vote->update($data);
             $request->session()->flash('success','Record updated');
             return response()->json([
@@ -432,7 +558,7 @@ class VotesController extends Controller
         }
 
         try {
-            $candidate = CandidateConst::with(['candidate','symbols', 'districts'])->where('fk_seat_id', $request->pkcode)->get();
+            $candidate = CandidateConst::with(['candidate','seats','symbols.party', 'districts'])->where('fk_seat_id', $request->pkcode)->get();
             if (! is_null($candidate)) {
                 //return redirect()->route('votes.test1');
 
@@ -466,6 +592,7 @@ class VotesController extends Controller
             $record = [
                 'fk_candidate_id' => $request->candidateID[$i],
                 'fk_seat_id' => $request->seatID,
+                'fk_candidateconst_id' => $request->ccID[$i],
                 'votes' => $request->votes[$i],
                 'EUID' => Session::get('user_id'),
                 'created_at'=> Carbon::now()
@@ -481,10 +608,11 @@ class VotesController extends Controller
             $totalVotes = intval($totalVotes);
 
             if($totalVotes < $intervotes){
-                $request->session()->flash('error', 'Entered votes access the registered votes!');
+                Votes::insert($data);
+                $request->session()->flash('success', 'Record entered successfully!');
             return response()->json([
                 'message' => 'Entered votes access the registered votes!!',
-                'status' => false,
+                'status' => true,
                 'intervotes' => $intervotes,
                 'totalvotes' => $totalVotes
             ]);
@@ -518,6 +646,7 @@ class VotesController extends Controller
             $record = [
                 'fk_candidate_id' => $request->candidateID[$i],
                 'fk_seat_id' => $request->seatID,
+                'fk_candidateconst_id' => $request->ccID[$i],
                 'votes' => $request->votes[$i],
                 'EUID' => Session::get('user_id'),
                 'created_at'=> Carbon::now()
@@ -532,10 +661,11 @@ class VotesController extends Controller
             $intervotes = array_sum($votesData);
             $totalVotes = intval($totalVotes);
             if($totalVotes < $intervotes){
-                $request->session()->flash('error', 'Entered votes access the registered votes!');
+                Votes::insert($data);
+            $request->session()->flash('success', 'Record entered successfully!');
             return response()->json([
                 'message' => 'Entered votes access the registered votes!!',
-                'status' => false,
+                'status' => true,
                 'intervotes' => $intervotes,
                 'totalvotes' => $totalVotes
 
@@ -573,7 +703,7 @@ class VotesController extends Controller
         }
 
         try {
-            $candidate = CandidateConst::with(['candidate','symbols', 'districts'])->where('fk_seat_id', $request->nacode)->get();
+            $candidate = CandidateConst::with(['candidate','seats','symbols.party', 'districts'])->where('fk_seat_id', $request->nacode)->get();
             if (! is_null($candidate)) {
                 return response()->json([
                     'data' => $candidate,

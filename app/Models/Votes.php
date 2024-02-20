@@ -19,6 +19,7 @@ class Votes extends Model
         'votes',
         'fk_candidate_id',
         'fk_seat_id',
+        'fk_candidateconst_id',
         'EUID',
         'UUID',
         'updated_at',
@@ -32,11 +33,11 @@ class Votes extends Model
     }
     public function candidatesconst()
     {
-        return $this->hasMany(CandidateConst::class, 'fk_candidate_id', 'fk_candidate_id');
+        return $this->hasMany(CandidateConst::class, 'CCID', 'fk_candidateconst_id');
     }
     public function singlecandidatesconst()
     {
-        return $this->hasOne(CandidateConst::class, 'fk_candidate_id', 'fk_candidate_id');
+        return $this->hasOne(CandidateConst::class, 'CCID', 'fk_candidateconst_id');
     }
     public function seats()
     {

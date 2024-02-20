@@ -361,9 +361,13 @@
                 data:formArray,
                 dataType:'json',
                 success:function(response){
-                    if(response["status"] === true){
-                        $('#createbtn').prop('disabled', false);
-
+                    if(response["status"] === true && response["exced"] ===true){
+                        $('#createBtn').prop('disabled', false);
+                        alert('Enter Votes exceds the registered votes');
+                        closeModal();
+                        window.location.href = '{{ route("votes.nalist") }}';
+                    } else if(response["status"] === true){
+                        $('#createBtn').prop('disabled', false);
                         closeModal();
                         window.location.href = '{{ route("votes.nalist") }}';
                     }else{

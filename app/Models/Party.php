@@ -14,4 +14,6 @@ class Party extends Model
     protected $table = 'parties';
     // public $incrementing = true;
     // protected $keyType = 'int';
+
+
 }

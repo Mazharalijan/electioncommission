@@ -28,6 +28,7 @@ class User extends Authenticatable
         'EUID',
         'UUID',
         'status',
+        'otp_status'
     ];
 
     /**

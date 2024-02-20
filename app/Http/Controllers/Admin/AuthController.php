@@ -25,10 +25,12 @@ class AuthController extends Controller
 
     public function login()
     {
+
         if(!Session::has("otpstatus") && Session::get("role") == "Operator"){
             Auth::guard('admin')->logout();
             Session::flush();
         }
+
         return view('Login.login1');
     }
 
@@ -50,6 +52,7 @@ class AuthController extends Controller
                     Session::put([
                         'user_id' => $admin->id,
                         'role' => $admin->role,
+
                     ]);
 
                     return redirect()->route('admin.home');
@@ -63,19 +66,19 @@ class AuthController extends Controller
                         'role' => $admin->role,
                         'phoneNo' => $admin->phoneNo,
                         'email' => $admin->email,
-                        "otpstatus" => 'okay'
+                        "otpstatus" => 'okay',
+                        "checkOtpStatus" => $admin->otp_status,
                     ]);
                     return redirect()->route("votes.pklist");
                     }else{
-
-                    Session::put([
+                        // session start
+                  $session =   Session::put([
                         'user_id' => $admin->id,
                         'role' => $admin->role,
                         'phoneNo' => $admin->phoneNo,
                         'email' => $admin->email,
+                        "checkOtpStatus" => $admin->otp_status,
                     ]);
-
-
 
                     return redirect()->route('operator.sendotp');
                 }
@@ -218,4 +221,46 @@ class AuthController extends Controller
 
 
     }
+     public function otpStatus(){
+        $admin = auth('admin')->user();
+        $operator = User::find($admin->id);
+
+        if($admin->otp_status == "Active"){
+            $data = [
+                "otp_status" => "In-Active"
+            ];
+            try{
+                $operator->update($data);
+                Session::put([
+                    "checkOtpStatus" => $operator->otp_status,
+                ]);
+                return redirect()->route("votes.pklist")->with("success","Otp In-Active Successfully!");
+            }catch(\Exception $error){
+                return redirect()->route("votes.pklist")->with("error","Otp does not In-Active");
+            }
+        }
+        if($admin->otp_status == "In-Active"){
+
+            $data = [
+                "otp_status" => "Active"
+            ];
+            try{
+                $operator->update($data);
+                Session::put([
+                    "checkOtpStatus" => $operator->otp_status,
+                ]);
+                return redirect()->route("votes.pklist")->with("success","Otp Active Successfully!");
+            }catch(\Exception $error){
+                return redirect()->route("votes.pklist")->with("error","Otp does not Active");
+            }
+
+        }
+     }
+     public function clearSession(){
+        if(!Session::has("otpstatus") && Session::get("role") == "Operator"){
+            Auth::guard('admin')->logout();
+            Session::flush();
+        }
+        return redirect()->route("login");
+     }
 }

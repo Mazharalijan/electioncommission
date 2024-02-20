@@ -375,14 +375,16 @@
                 dataType:'json',
                 success:function(response){
 
-                    if(response["status"] === true){
+
+                     if(response["status"] === true && response["exced"] ===true){
+                        $('#createBtn').prop('disabled', false);
+                        alert('Enter Votes exceds the registered votes');
+                        closeModal();
+                        window.location.href = '{{ route("votes.pklist") }}';
+                    } else if(response["status"] === true){
                         $('#createBtn').prop('disabled', false);
                         closeModal();
                         window.location.href = '{{ route("votes.pklist") }}';
-                    }
-                    else if(response["status"] === false && response["exced"] ===true){
-                        $('#createBtn').prop('disabled', false);
-                        alert('Enter Votes exceds the registered votes');
                     }
                     else{
                         $('#createBtn').prop('disabled', false);

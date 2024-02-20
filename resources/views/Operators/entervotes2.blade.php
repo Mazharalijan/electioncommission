@@ -277,8 +277,9 @@
                         $('#pkvotesentrytable').empty();
                         $("#pkvotesentrytable").append(`<tr>
                             <th>Candidate</th>
-
+                            <th>Party</th>
                             <th>Symbol</th>
+                            <th>Seat</th>
                             <th>Total Votes</th>
                           </tr>`);
 
@@ -287,15 +288,20 @@
                             $('#pkvotesentrytable').append(`<tr>
                                 <td>${value.candidate.candidateName}
                                     <input type='hidden' name='candidateID[]' value='${value.candidate.candidateID}'>
+                                    <input type='hidden' name='ccID[]' value='${value.CCID}'>
                                     <input type='hidden' name='seatID' value='${value.fk_seat_id}'>
                                 </td>
-
+                                <td>${value.symbols !== null ? value.symbols.party.partyName : "null"}</td>
                                 <td>${value.symbols !== null ? '<img width="50px" height="45px" src="{{ url('/PartySymbol/') }}'+'/'+value.symbols.symbolImage+'" />'  : 'Null'}</td>
+                                <td>${value.seats.seatCode}</td>
                                 <td class="total-votes">
                                   <input
                                     class="input-form"
                                     type="number"
                                     name="votes[]"
+                                    onfocus="clearDefaultValue(this)"
+                                    onblur="restoreDefaultValue(this)"
+                                    value=0
                                     placeholder="Enter here"
                                     required
                                   />
@@ -329,6 +335,20 @@
                 }
             })
         });
+        function clearDefaultValue(inputElement) {
+            // Check if the current value is the default value
+            if (inputElement.value === inputElement.defaultValue) {
+                // Clear the input field
+                inputElement.value = '';
+            }
+        }
+        function restoreDefaultValue(inputElement) {
+            // Check if the input field is empty
+            if (inputElement.value === '') {
+                // Restore the default value
+                inputElement.value = inputElement.defaultValue;
+            }
+        }
         $("#nadropdownform").submit(function(event){
 
 
@@ -348,7 +368,9 @@
                         $('#natableid').empty();
                         $("#natableid").append(`<tr>
                             <th>Candidate</th>
+                            <th>Party</th>
                             <th>Symbol</th>
+                            <th>Seat</th>
                             <th>Total Votes</th>
                           </tr>`);
                         $.each(response["data"], function(key, value) {
@@ -356,14 +378,20 @@
                             $('#natableid').append(`<tr>
                                 <td>${value.candidate.candidateName}
                                     <input type='hidden' name='candidateID[]' value='${value.candidate.candidateID}'>
+                                    <input type='hidden' name='ccID[]' value='${value.CCID}'>
                                     <input type='hidden' name='seatID' value='${value.fk_seat_id}'>
                                 </td>
+                                <td>${value.symbols !== null ? value.symbols.party.partyName : "null"}</td>
                                 <td>${value.symbols !== null ? '<img width="50px" height="45px" src="{{ url('/PartySymbol/') }}'+'/'+value.symbols.symbolImage+'" />'  : 'Null'}</td>
+                                <td>${value.seats.seatCode}</td>
                                 <td class="total-votes">
                                   <input
                                     class="input-form"
                                     type="number"
                                     name="votes[]"
+                                    onfocus="clearDefaultValue(this)"
+                                    onblur="restoreDefaultValue(this)"
+                                    value=0
                                     placeholder="Enter here"
                                     required
                                   />
@@ -408,16 +436,17 @@
                 data: formArray,
                 dataType: 'json',
                 success: function (response) {
+                    if(response["status"] === true && response['totalvotes'] < response['intervotes']){
+                        alert("Entered Votes sum more than registered votes")
+                        window.location.replace("{{ route('votes.pklist') }}");
+
+                    }
                     if(response["status"] === true){
 
                         window.location.replace("{{ route('votes.pklist') }}");
 
                     }
-                    if(response["status"] === false && response['totalvotes'] < response['intervotes']){
-                        alert("Entered Votes sum more than registered votes")
-                        $("#pkseatsform").show();
 
-                    }
 
 
                 }
@@ -437,17 +466,18 @@
                 data: formArray,
                 dataType: 'JSON',
                 success: function (response) {
+                    if(response["status"] === false && response['totalvotes'] < response['intervotes']){
+                        alert("Entered Votes sum more than registered votes")
+                        window.location.replace("{{ route('votes.nalist') }}");
+
+                    }
 
                     if(response["status"] === true){
 
                         window.location.replace("{{ route('votes.nalist') }}");
 
                     }
-                    if(response["status"] === false && response['totalvotes'] < response['intervotes']){
-                        alert("Entered Votes sum more than registered votes")
-                        $("#naseatsform").show();
 
-                    }
 
 
 

@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
-
+use Illuminate\Support\Facades\Auth;
 class IfLoggedIn
 {
     /**
@@ -21,11 +21,19 @@ class IfLoggedIn
         } else {
             if (Session::has('user_id') && Session::get('role') == 'Admin') {
                 return redirect()->route('admin.home');
-            } elseif (Session::has('user_id') && Session::get('role') == 'Operator' && Session::get('otpstatus') == 'okay') {
+            }elseif(!Session::has("otpstatus") && Session::get("role") == "Operator"){
+                return redirect()->route("clearSession");
+            }
+             elseif (Session::has('user_id') && Session::get('role') == 'Operator' && Session::get('otpstatus') == 'okay') {
                 return redirect()->route('votes.pklist');
             } else {
+
                 return redirect()->route('login');
             }
+
+
+
+
         }
 
     }

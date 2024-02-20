@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -10,7 +11,7 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-    <link rel="stylesheet" href="{{ asset('assest/css/districtoperator3.css') }}" />
+
     <link rel="stylesheet" href="{{ asset('assest/css/districtoperator4.css') }}" />
     <link rel="stylesheet" href="{{ asset('assest/css/modal.css') }}" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -35,7 +36,17 @@
         <div class="dropdown-content" id="dropdownContent">
 
           <a href="{{ route('changePassword') }}">Change Password</a>
+          @if(Session::get("role") == "Operator" && Session::get("checkOtpStatus") == "Active")
+          <a href="{{ route('otpStatus') }}">In-Active Otp Check</a>
+          @endif
+          @if(Session::get("role") == "Operator" && Session::get("checkOtpStatus") == "In-Active")
+          <a href="{{ route('otpStatus') }}">Active Otp Check</a>
+          @endif
           <a href="{{ route('logout') }}">Logout</a>
+
+
+
+
         </div>
         <button id="hamburger-button" class="hamburger-button">
             <div class="hamburger-line"></div>
@@ -64,6 +75,7 @@
             <a href="{{ route('operator.list') }}">Users Account</a>
           </li>
           @endif
+
 
         </ul>
       </aside>
